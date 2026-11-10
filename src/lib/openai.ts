@@ -16,6 +16,7 @@ Respond with a single JSON object and nothing else:
 Rules for answer:
 - No preamble such as "The answer is" or "Final answer".
 - No numbered steps and no explanation of how the result was reached.
+- For multiple choice, return only the letter and the choice text (example: "B) mitochondria"). Do not list the other options.
 - Use $...$ for inline math and $$...$$ for display math. Do not use \\( \\) or \\[ \\].
 - Write money amounts in words so dollar signs stay reserved for math.
 - If several questions are visible, give each final answer labeled with its number, still with no work shown.

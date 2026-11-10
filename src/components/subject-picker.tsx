@@ -26,7 +26,7 @@ export function SubjectPicker({
                 "shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 selected
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground hover:bg-accent",
+                  : "border-border bg-black/25 text-foreground hover:bg-accent",
               )}
             >
               {subject === "Auto" ? "Auto" : subject}
