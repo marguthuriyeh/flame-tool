@@ -11,7 +11,11 @@ const eslintConfig = defineConfig([
     ".next/**",
     "out/**",
     "build/**",
+    "release/**",
     "next-env.d.ts",
+    // Electron packaging scripts use CommonJS require().
+    "electron/**",
+    "scripts/**",
   ]),
 ]);
 
