@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AnswerCard } from "@/components/answer-card";
+import { ApiKeySettings } from "@/components/api-key-settings";
 import { CropFrame } from "@/components/crop-frame";
 import { FlameIcon } from "@/components/flame-icon";
 import { HistoryPanel } from "@/components/history-panel";
@@ -15,11 +16,13 @@ import {
   fileToFrame,
   frameToDataUrl,
   loadSampleFrame,
+  ScreenPermissionError,
   type CaptureNotice,
   type CapturedFrame,
   type Crop,
 } from "@/lib/capture";
 import { EXAMPLES } from "@/lib/examples";
+import { getFlameDesktop, isElectronApp } from "@/lib/flame-desktop";
 import { getEmptyHistory, getHistorySnapshot, saveHistory, subscribeHistory } from "@/lib/history";
 import type { HistoryItem, SolveResult, Source, SubjectChoice } from "@/lib/types";
 
@@ -45,6 +48,11 @@ export function SolverApp() {
   const history = useSyncExternalStore(subscribeHistory, getHistorySnapshot, getEmptyHistory);
   const [result, setResult] = useState<HistoryItem | null>(null);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const electron = useSyncExternalStore(
+    () => () => undefined,
+    () => isElectronApp(),
+    () => false,
+  );
   const fileRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<string | null>(null);
   const answerRef = useRef<HTMLDivElement>(null);
@@ -52,14 +60,22 @@ export function SolverApp() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/status", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data: { configured?: boolean }) => {
+    async function refreshStatus() {
+      try {
+        const desktop = getFlameDesktop();
+        if (desktop) {
+          const key = await desktop.getApiKey();
+          if (!cancelled) setConfigured(Boolean(key));
+          return;
+        }
+        const response = await fetch("/api/status", { cache: "no-store" });
+        const data = (await response.json()) as { configured?: boolean };
         if (!cancelled) setConfigured(Boolean(data.configured));
-      })
-      .catch(() => {
+      } catch {
         if (!cancelled) setConfigured(false);
-      });
+      }
+    }
+    void refreshStatus();
     return () => {
       cancelled = true;
     };
@@ -105,7 +121,15 @@ export function SolverApp() {
       setPhase("preview");
     } catch (error) {
       setPhase(preview ? "preview" : "idle");
-      setNotice(captureErrorNotice(error));
+      const notice = captureErrorNotice(error);
+      if (error instanceof ScreenPermissionError) {
+        setNotice({
+          ...notice,
+          body: `${notice.body} You can still upload a photo or type the problem.`,
+        });
+      } else {
+        setNotice(notice);
+      }
     }
   }
 
@@ -268,10 +292,22 @@ export function SolverApp() {
           {configured === false && (
             <div className="mb-8 max-w-full break-words rounded-2xl border border-border bg-card/90 px-4 py-3 text-sm leading-6 text-foreground">
               <p>
-                Demo mode is on, so answers are samples. Add{" "}
-                <code className="font-mono text-[0.92em] break-all text-accent-foreground">OPENAI_API_KEY</code> to{" "}
-                <code className="font-mono text-[0.92em] text-accent-foreground">.env.local</code> and restart the server
-                when you want a real model to read the problem. The key stays on the server.
+                Demo mode is on, so answers are samples.{" "}
+                {electron ? (
+                  <>
+                    Use <span className="font-medium text-accent-foreground">API key settings</span> below, or set{" "}
+                    <code className="font-mono text-[0.92em] break-all text-accent-foreground">OPENAI_API_KEY</code> in
+                    the environment before launch, when you want a real model to read the problem. The key stays on this
+                    Mac.
+                  </>
+                ) : (
+                  <>
+                    Add{" "}
+                    <code className="font-mono text-[0.92em] break-all text-accent-foreground">OPENAI_API_KEY</code> to{" "}
+                    <code className="font-mono text-[0.92em] text-accent-foreground">.env.local</code> and restart the
+                    server when you want a real model to read the problem. The key stays on the server.
+                  </>
+                )}
               </p>
               <Button
                 type="button"
@@ -307,7 +343,13 @@ export function SolverApp() {
                 <FlameIcon className="h-7 w-7" />
                 {primaryLabel}
               </Button>
-              <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">{helperCopy}</p>
+              <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
+                {electron
+                  ? phase === "preview"
+                    ? helperCopy
+                    : "Analyze grabs this Mac’s main screen. No browser picker."
+                  : helperCopy}
+              </p>
             </div>
 
             <div className="rise-in-late mt-4 flex w-full flex-wrap items-center justify-center gap-2">
@@ -370,6 +412,13 @@ export function SolverApp() {
             </div>
           )}
 
+          {electron && (
+            <ApiKeySettings
+              configured={configured}
+              onConfiguredChange={(value) => setConfigured(value)}
+            />
+          )}
+
           {notice && (
             <div
               role="alert"
@@ -377,6 +426,16 @@ export function SolverApp() {
             >
               <p className="font-medium">{notice.title}</p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">{notice.body}</p>
+              {notice.title === "Screen Recording is off" && electron && (
+                <Button
+                  type="button"
+                  variant="link"
+                  className="mt-1 h-auto px-0"
+                  onClick={() => void getFlameDesktop()?.openScreenSettings()}
+                >
+                  Open Screen Recording settings
+                </Button>
+              )}
               {configured === false && (
                 <Button
                   type="button"

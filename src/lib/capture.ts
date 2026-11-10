@@ -16,7 +16,22 @@ export type CaptureNotice = {
   body: string;
 };
 
+export class ScreenPermissionError extends Error {
+  readonly code = "permission-denied";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ScreenPermissionError";
+  }
+}
+
 export function captureErrorNotice(error: unknown): CaptureNotice {
+  if (error instanceof ScreenPermissionError) {
+    return {
+      title: "Screen Recording is off",
+      body: error.message,
+    };
+  }
   const name = error instanceof DOMException ? error.name : "";
   if (name === "NotAllowedError" || name === "AbortError") {
     return {
@@ -65,6 +80,29 @@ export function clampCrop(crop: Crop, width: number, height: number): Crop {
 }
 
 export async function captureScreenFrame(): Promise<CapturedFrame> {
+  const desktop = typeof window !== "undefined" ? window.flame : undefined;
+  if (desktop?.isElectron) {
+    const access = await desktop.getScreenAccess();
+    if (access.status === "denied" || access.status === "restricted") {
+      throw new ScreenPermissionError(
+        "Enable Screen Recording for The Flame Tool in System Settings > Privacy & Security > Screen Recording, then quit and reopen the app.",
+      );
+    }
+
+    const captured = await desktop.capturePrimaryScreen();
+    if (!captured.ok) {
+      if (captured.code === "permission-denied") {
+        throw new ScreenPermissionError(captured.message);
+      }
+      throw new Error(captured.message);
+    }
+
+    const bytes = Uint8Array.from(atob(captured.base64), (char) => char.charCodeAt(0));
+    const blob = new Blob([bytes], { type: captured.mime || "image/png" });
+    const frame = await blobToScaledFrame(blob, captured.width, captured.height);
+    return frame;
+  }
+
   if (!navigator.mediaDevices?.getDisplayMedia) {
     throw new DOMException(
       "Screen capture is not available in this browser.",
@@ -104,6 +142,24 @@ export async function captureScreenFrame(): Promise<CapturedFrame> {
   } finally {
     stream.getTracks().forEach((track) => track.stop());
     video.remove();
+  }
+}
+
+async function blobToScaledFrame(
+  blob: Blob,
+  width: number,
+  height: number,
+): Promise<CapturedFrame> {
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const canvas = scaleCanvas(width || bitmap.width, height || bitmap.height, 1600);
+    const context = canvas.getContext("2d");
+    if (!context) throw new Error("Could not read the shared screen.");
+    context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const scaled = await canvasToBlob(canvas, 0.86);
+    return { blob: scaled, width: canvas.width, height: canvas.height };
+  } finally {
+    bitmap.close();
   }
 }
 
