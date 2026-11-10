@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#E7D3BF"/>
+  <rect x="78" y="46" width="1044" height="668" rx="10" fill="#FFFDF8" stroke="#E4D3C2"/>
+  <g stroke="#F3E6D6" stroke-width="2">
+    <path d="M120 210 H1080"/>
+    <path d="M120 270 H1080"/>
+    <path d="M120 330 H1080"/>
+    <path d="M120 390 H1080"/>
+    <path d="M120 450 H1080"/>
+    <path d="M120 510 H1080"/>
+    <path d="M120 570 H1080"/>
+  </g>
+  <text x="120" y="130" fill="#B43212" font-family="Georgia, serif" font-size="28">Algebra II homework</text>
+  <text x="120" y="178" fill="#6E5C52" font-family="Georgia, serif" font-size="22">Name ________________________</text>
+  <text x="120" y="250" fill="#2A211C" font-family="Georgia, serif" font-size="34">1. Solve for x.</text>
+  <text x="150" y="360" fill="#2A211C" font-family="Georgia, serif" font-size="64">2x^2 - 8x + 6 = 0</text>
+  <text x="120" y="470" fill="#6E5C52" font-family="Georgia, serif" font-size="26">Write the final answer only.</text>
+</svg>

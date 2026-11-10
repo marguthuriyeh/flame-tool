@@ -1,0 +1,86 @@
+@import "tailwindcss";
+@import "katex/dist/katex.min.css";
+
+:root {
+  --paper: #f6efe6;
+  --ink: #2a211c;
+  --muted: #6e5c52;
+  --line: #eadfd3;
+  --flame: #e25822;
+  --flame-deep: #b43212;
+  --cream: #fffaf5;
+  --blush: #fff1e8;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--cream);
+  --card-foreground: var(--ink);
+  --primary: var(--flame);
+  --primary-foreground: #fffaf5;
+  --secondary: var(--blush);
+  --secondary-foreground: var(--ink);
+  --muted-foreground: var(--muted);
+  --accent: var(--blush);
+  --accent-foreground: var(--ink);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--flame);
+  --destructive: #9f2d2d;
+  --destructive-foreground: #fffaf5;
+  --radius: 0.85rem;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: #f3ebe3;
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --radius-lg: var(--radius);
+}
+
+body {
+  background:
+    radial-gradient(880px 380px at 50% -120px, rgba(226, 88, 34, 0.16), transparent 62%),
+    var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background: rgba(226, 88, 34, 0.22);
+}
+
+.answer-math .katex-display {
+  margin: 0.35rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.question-math .katex {
+  font-size: 1.02em;
+}
+
+.answer-math .katex {
+  font-size: 1.05em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
