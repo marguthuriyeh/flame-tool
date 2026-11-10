@@ -65,7 +65,7 @@ export function CropFrame({
   const cropping = crop !== null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-3 sm:p-4">
+    <div className="rounded-2xl border border-border bg-card/95 p-3 backdrop-blur-sm sm:p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">
           {cropping ? "Drag the frame or a corner. Cropping is optional." : "Using the full frame."}
@@ -94,7 +94,7 @@ export function CropFrame({
       <div className="mt-3 flex justify-center">
         <div
           ref={frameRef}
-          className="relative inline-block max-w-full overflow-hidden rounded-xl bg-[#2a211c]"
+          className="relative inline-block max-w-full overflow-hidden rounded-xl bg-[#090606]"
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
