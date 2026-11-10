@@ -24,11 +24,11 @@ function SheetContent({
 }: React.ComponentProps<typeof Dialog.Content> & { side?: "left" | "right" }) {
   return (
     <Dialog.Portal>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-[rgba(42,33,28,0.45)]" />
+      <Dialog.Overlay className="fixed inset-0 z-50 bg-[rgba(5,2,1,0.72)]" />
       <Dialog.Content
         aria-describedby={undefined}
         className={cn(
-          "fixed z-50 flex h-full w-[min(100%,22rem)] flex-col gap-3 bg-card p-4 shadow-xl outline-none",
+          "fixed z-50 flex h-full w-[min(100%,22rem)] flex-col gap-3 bg-[#140b09] p-4 shadow-xl outline-none",
           side === "left" ? "inset-y-0 left-0 border-r border-border" : "inset-y-0 right-0 border-l border-border",
           className,
         )}

@@ -1,11 +1,14 @@
 # The Flame Tool
 
-The Flame Tool answers high-school problems. A student can share a screen, upload a photo, or type a question, optionally pick a subject, and get the final answer. Math is rendered with KaTeX. Worked steps are not shown.
+The Flame Tool is an AI problem solver for high-school schoolwork — math, science, English, history, and similar. A student clicks **Analyze**, shares a screen (or uploads a photo / types a question), and gets **only the final answer**. No steps. No explanation. For multiple choice, just the letter and the choice text.
+
+The UI uses a flame theme: dark charcoal backgrounds with orange, red, and yellow gradients, a flame logo, and a large centered Analyze button.
 
 ## What you can do
 
 - **Analyze** uses the browser Screen Capture API (`getDisplayMedia`). You pick a screen, window, or tab, and the app grabs one frame.
-- Crop that frame, or keep the full picture.
+- That frame is sent to a vision model that reads the schoolwork on screen and returns the final answer.
+- Crop the frame, or keep the full picture.
 - Upload a photo or type a problem if screen sharing is unavailable.
 - Pick a subject (Math, Physics, Chemistry, Biology, History, English) or leave it on Auto.
 - Review questions from this browser tab. History stays in `sessionStorage` and clears when the tab closes.
@@ -41,7 +44,7 @@ Optional settings:
 
 ## Demo mode
 
-If `OPENAI_API_KEY` is missing or blank, the app still runs. A banner explains how to add the key. Analyze, crop, upload, and typed problems all work, and the answers are labeled samples. The built-in examples (a quadratic, a thrown ball, and others) return real final answers so the interface can be tried without a model. A captured or uploaded photo that is not the sample worksheet does not pretend to have been read.
+If `OPENAI_API_KEY` is missing or blank, the app still runs. A banner explains how to add the key. Analyze, crop, upload, and typed problems all work, and the answers are labeled samples. The built-in examples (a quadratic, a thrown ball, a multiple-choice biology question, and others) return real final answers so the interface can be tried without a model. A captured or uploaded photo that is not the sample worksheet does not pretend to have been read.
 
 Restart the dev server after changing `.env.local`.
 
@@ -80,6 +83,6 @@ npm start
 }
 ```
 
-Send `problem`, `image`, or both. The response is the final answer plus a one-line restatement of the question. The model is instructed not to return steps or an explanation.
+Send `problem`, `image`, or both. The response is the final answer plus a one-line restatement of the question. The model is instructed not to return steps or an explanation. Multiple-choice answers are letter + choice text only.
 
 `GET /api/status` returns `{ "configured": true }` or `{ "configured": false }`. It does not return the key.

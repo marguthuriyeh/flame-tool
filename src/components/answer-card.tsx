@@ -21,7 +21,7 @@ export function AnswerCard({
   const centered = solution.answer.includes("$$") || plainSnippet(solution.answer).length < 80;
 
   return (
-    <section className="rounded-2xl border border-border bg-card px-5 py-6 shadow-[0_16px_40px_rgba(42,33,28,0.05)] sm:px-7">
+    <section className="rounded-2xl border border-border bg-card/95 px-5 py-6 backdrop-blur-sm sm:px-7">
       <div className="flex flex-wrap gap-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
         <span>{solution.detectedSubject}</span>
         <span aria-hidden="true">·</span>
@@ -33,13 +33,15 @@ export function AnswerCard({
           </>
         )}
       </div>
-      <div className="question-math mt-4 text-base leading-7 text-foreground">
+      <div className="question-math mt-4 text-base leading-7 text-foreground/90">
         <MathText text={solution.problemText} />
       </div>
       <h2 className="mt-6 font-serif text-sm font-medium uppercase tracking-[0.16em] text-primary">
         Answer
       </h2>
-      <div className={`answer-math mt-2 text-3xl leading-snug text-foreground ${centered ? "text-center" : "text-left"}`}>
+      <div
+        className={`answer-math mt-2 text-3xl leading-snug text-foreground ${centered ? "text-center" : "text-left"}`}
+      >
         <MathText text={solution.answer} />
       </div>
     </section>

@@ -55,6 +55,16 @@ export const EXAMPLES: Example[] = [
     tests: ["mitosis"],
   },
   {
+    id: "cell-power",
+    label: "Multiple choice",
+    subject: "Biology",
+    problem:
+      "Which organelle produces most of a cell's ATP? A) nucleus B) mitochondria C) ribosome D) Golgi apparatus",
+    problemText: "Which organelle produces most of a cell's ATP?",
+    answer: "B) mitochondria",
+    tests: ["golgi apparatus", "which organelle produces most"],
+  },
+  {
     id: "stamp",
     label: "Stamp Act",
     subject: "History",

@@ -48,7 +48,9 @@ export function HistoryPanel({
                   onClick={() => onSelect(item)}
                   className={cn(
                     "w-full cursor-pointer rounded-xl border px-3 py-2.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    active ? "border-primary bg-secondary" : "border-border bg-background hover:bg-accent",
+                    active
+                      ? "border-primary bg-secondary"
+                      : "border-border bg-black/20 hover:bg-accent",
                   )}
                 >
                   <span className="line-clamp-2 text-sm text-foreground">

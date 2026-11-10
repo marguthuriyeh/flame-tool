@@ -198,22 +198,29 @@ export function SolverApp() {
           ? "Analyze this frame"
           : "Analyze";
 
+  const helperCopy =
+    phase === "preview"
+      ? "This frame is ready. Crop it if you want, then analyze it."
+      : phase === "solved" && preview
+        ? "The answer is below. Analyze again to share a different screen."
+        : "Share a screen, window, or tab that shows the problem. One frame is sent.";
+
   return (
-    <div className="min-h-dvh">
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm">
+    <div className="flame-stage">
+      <header className="relative z-10 border-b border-border/70 bg-black/20 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-secondary text-primary">
-              <FlameIcon className="h-7 w-7" />
+              <FlameIcon className="flame-logo h-7 w-7" />
             </span>
             <div>
-              <h1 className="font-serif text-[1.65rem] leading-none tracking-tight">The Flame Tool</h1>
-              <p className="mt-1 text-sm text-muted-foreground">The answer, and nothing around it.</p>
+              <p className="font-serif text-lg leading-none tracking-tight text-foreground">The Flame Tool</p>
+              <p className="mt-1 text-xs text-muted-foreground">High-school answers, nothing else.</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             {configured === false && (
-              <span className="hidden rounded-full bg-secondary px-3 py-1 text-xs font-medium text-primary sm:inline">
+              <span className="hidden rounded-md border border-border bg-secondary px-3 py-1 text-xs font-medium text-accent-foreground sm:inline">
                 Demo mode
               </span>
             )}
@@ -244,8 +251,8 @@ export function SolverApp() {
         </div>
       </header>
 
-      <div className="mx-auto grid min-w-0 max-w-6xl lg:grid-cols-[280px_minmax(0,1fr)]">
-        <aside className="hidden border-r border-border px-4 py-6 lg:sticky lg:top-0 lg:block lg:max-h-dvh lg:overflow-y-auto">
+      <div className="relative z-10 mx-auto grid min-w-0 max-w-6xl lg:grid-cols-[280px_minmax(0,1fr)]">
+        <aside className="hidden border-r border-border/70 px-4 py-6 lg:sticky lg:top-0 lg:block lg:max-h-dvh lg:overflow-y-auto">
           <HistoryPanel
             items={history}
             activeId={result?.id ?? null}
@@ -259,37 +266,51 @@ export function SolverApp() {
 
         <main className="min-w-0 px-4 py-6 sm:px-8 sm:py-10">
           {configured === false && (
-            <div className="mb-8 max-w-full break-words rounded-2xl border border-border bg-secondary/70 px-4 py-3 text-sm leading-6 text-foreground">
+            <div className="mb-8 max-w-full break-words rounded-2xl border border-border bg-card/90 px-4 py-3 text-sm leading-6 text-foreground">
               <p>
                 Demo mode is on, so answers are samples. Add{" "}
-                <code className="font-mono text-[0.92em] break-all">OPENAI_API_KEY</code> to{" "}
-                <code className="font-mono text-[0.92em]">.env.local</code> and restart the server when you want a real model to read the problem. The key stays on the server.
+                <code className="font-mono text-[0.92em] break-all text-accent-foreground">OPENAI_API_KEY</code> to{" "}
+                <code className="font-mono text-[0.92em] text-accent-foreground">.env.local</code> and restart the server
+                when you want a real model to read the problem. The key stays on the server.
               </p>
-              <Button type="button" variant="link" className="mt-1 h-auto px-0" onClick={() => void showSampleWorksheet()} disabled={busy}>
+              <Button
+                type="button"
+                variant="link"
+                className="mt-1 h-auto px-0"
+                onClick={() => void showSampleWorksheet()}
+                disabled={busy}
+              >
                 Try a sample worksheet
               </Button>
             </div>
           )}
 
-          <div className="mx-auto flex w-full min-w-0 max-w-xl flex-col items-center text-center">
-            <Button
-              type="button"
-              onClick={() => void onPrimary()}
-              disabled={busy}
-              aria-busy={busy}
-              className="h-auto min-h-28 w-full max-w-[22rem] rounded-full px-8 py-6 text-xl font-semibold tracking-tight shadow-[0_18px_40px_rgba(180,50,18,0.28)]"
-            >
-              <FlameIcon className="h-7 w-7" />
-              {primaryLabel}
-            </Button>
-            <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">
-              {phase === "preview"
-                ? "This frame is ready. Crop it if you want, then analyze it."
-                : phase === "solved" && preview
-                  ? "The answer is below. Analyze again to share a different screen."
-                  : "Share a screen, window, or tab that shows the problem. One frame is sent."}
-            </p>
-            <div className="mt-4 flex w-full flex-wrap items-center justify-center gap-2">
+          <section className="mx-auto flex min-h-[min(72vh,40rem)] w-full min-w-0 max-w-xl flex-col items-center justify-center text-center">
+            <div className="rise-in flex flex-col items-center">
+              <FlameIcon className="flame-logo h-16 w-16 text-primary sm:h-20 sm:w-20" />
+              <h1 className="mt-5 font-serif text-5xl leading-none tracking-tight text-foreground sm:text-6xl">
+                The Flame Tool
+              </h1>
+              <p className="mt-4 max-w-md text-base leading-7 text-muted-foreground">
+                Point it at schoolwork. Get only the final answer.
+              </p>
+            </div>
+
+            <div className="rise-in-delay mt-10 w-full">
+              <Button
+                type="button"
+                onClick={() => void onPrimary()}
+                disabled={busy}
+                aria-busy={busy}
+                className="analyze-cta h-auto min-h-28 w-full max-w-[22rem] rounded-full bg-gradient-to-b from-[#ff8a3d] via-[#ff5318] to-[#d62a08] px-8 py-6 text-xl font-semibold tracking-tight text-primary-foreground hover:from-[#ff9a55] hover:via-[#ff6128] hover:to-[#e23410]"
+              >
+                <FlameIcon className="h-7 w-7" />
+                {primaryLabel}
+              </Button>
+              <p className="mt-4 max-w-sm text-sm leading-6 text-muted-foreground">{helperCopy}</p>
+            </div>
+
+            <div className="rise-in-late mt-4 flex w-full flex-wrap items-center justify-center gap-2">
               {preview && (
                 <Button type="button" variant="ghost" disabled={busy} onClick={() => void startCapture()}>
                   Share a different screen
@@ -313,9 +334,9 @@ export function SolverApp() {
                 void onFile(file);
               }}
             />
-          </div>
+          </section>
 
-          <div className="mx-auto mt-8 w-full min-w-0 max-w-xl">
+          <div className="mx-auto mt-2 w-full min-w-0 max-w-xl">
             <SubjectPicker value={subject} onChange={setSubject} disabled={busy} />
           </div>
 
@@ -350,11 +371,20 @@ export function SolverApp() {
           )}
 
           {notice && (
-            <div role="alert" className="mx-auto mt-6 max-w-xl rounded-2xl border border-border bg-card px-4 py-3">
+            <div
+              role="alert"
+              className="mx-auto mt-6 max-w-xl rounded-2xl border border-border bg-card px-4 py-3"
+            >
               <p className="font-medium">{notice.title}</p>
               <p className="mt-1 text-sm leading-6 text-muted-foreground">{notice.body}</p>
               {configured === false && (
-                <Button type="button" variant="link" className="mt-1 h-auto px-0" onClick={() => void showSampleWorksheet()} disabled={busy}>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="mt-1 h-auto px-0"
+                  onClick={() => void showSampleWorksheet()}
+                  disabled={busy}
+                >
                   Try a sample worksheet
                 </Button>
               )}
@@ -392,7 +422,7 @@ export function SolverApp() {
           )}
 
           {!result && !preview && (
-            <div className="mx-auto mt-10 w-full min-w-0 max-w-xl">
+            <div className="mx-auto mt-10 w-full min-w-0 max-w-xl pb-10">
               <p className="text-sm text-muted-foreground">Or try a typed example</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 {EXAMPLES.map((example) => (
