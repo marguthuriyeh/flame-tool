@@ -1,6 +1,8 @@
-import { openAIKey } from "@/lib/env";
+import { resolveProvider } from "@/lib/env";
+import { solveWithGemini } from "@/lib/gemini";
 import { mockSolve } from "@/lib/mock-solver";
-import { ModelError, solveWithOpenAI } from "@/lib/openai";
+import { ModelError } from "@/lib/model-error";
+import { solveWithOpenAI } from "@/lib/openai";
 import { isSubjectChoice, type SubjectChoice } from "@/lib/types";
 import { connection } from "next/server";
 
@@ -42,24 +44,39 @@ export async function POST(request: Request) {
     return jsonError("Add a problem, or Analyze a screen that shows one.", 400);
   }
 
-  const key = openAIKey();
+  const { provider, key } = resolveProvider();
   try {
-    const solution = key
-      ? await solveWithOpenAI({
-          key,
-          subject,
-          problem: problem || undefined,
-          image: image || undefined,
-        })
-      : mockSolve({
-          problem,
-          subject,
-          sample,
-          hasImage: Boolean(image),
-        });
+    let solution;
+    if (provider === "gemini" && key) {
+      solution = await solveWithGemini({
+        key,
+        subject,
+        problem: problem || undefined,
+        image: image || undefined,
+      });
+    } else if (provider === "openai" && key) {
+      solution = await solveWithOpenAI({
+        key,
+        subject,
+        problem: problem || undefined,
+        image: image || undefined,
+      });
+    } else {
+      solution = mockSolve({
+        problem,
+        subject,
+        sample,
+        hasImage: Boolean(image),
+      });
+    }
 
     return Response.json(
-      { solution, mock: !key, configured: Boolean(key) },
+      {
+        solution,
+        mock: !provider,
+        configured: Boolean(provider),
+        provider: provider ?? "demo",
+      },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {

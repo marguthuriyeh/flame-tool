@@ -5,29 +5,34 @@ export type ScreenAccessStatus =
   | "not-determined"
   | "unknown";
 
+export type HotkeyCapturePayload =
+  | {
+      ok: true;
+      status: ScreenAccessStatus;
+      mime: string;
+      width: number;
+      height: number;
+      base64: string;
+    }
+  | {
+      ok: false;
+      code: string;
+      status: ScreenAccessStatus;
+      message: string;
+    };
+
 export type FlameDesktop = {
   isElectron: true;
   getScreenAccess: () => Promise<{ status: ScreenAccessStatus; platform: string }>;
   openScreenSettings: () => Promise<boolean>;
-  capturePrimaryScreen: () => Promise<
-    | {
-        ok: true;
-        status: ScreenAccessStatus;
-        mime: string;
-        width: number;
-        height: number;
-        base64: string;
-      }
-    | {
-        ok: false;
-        code: string;
-        status: ScreenAccessStatus;
-        message: string;
-      }
-  >;
+  capturePrimaryScreen: () => Promise<HotkeyCapturePayload>;
+  getGeminiApiKey: () => Promise<string>;
+  setGeminiApiKey: (key: string) => Promise<{ saved: boolean; configured: boolean }>;
   getApiKey: () => Promise<string>;
   setApiKey: (key: string) => Promise<{ saved: boolean; configured: boolean }>;
   getPlatform: () => Promise<string>;
+  getAnalyzeShortcut: () => Promise<string>;
+  onHotkeyAnalyze: (callback: (payload: HotkeyCapturePayload) => void) => () => void;
 };
 
 declare global {

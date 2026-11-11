@@ -23,32 +23,54 @@ function writeSettings(next) {
   fs.writeFileSync(file, JSON.stringify(next, null, 2), "utf8");
 }
 
-function getApiKey() {
-  const fromEnv = (process.env.OPENAI_API_KEY || "").trim();
+function getGeminiApiKey() {
+  const fromEnv = (process.env.GEMINI_API_KEY || "").trim();
   if (fromEnv) return fromEnv;
-  const stored = readSettings().apiKey;
+  const stored = readSettings().geminiApiKey;
   return typeof stored === "string" ? stored.trim() : "";
 }
 
-function setApiKey(key) {
+function setGeminiApiKey(key) {
   const value = typeof key === "string" ? key.trim() : "";
   const current = readSettings();
-  if (value) current.apiKey = value;
-  else delete current.apiKey;
+  if (value) current.geminiApiKey = value;
+  else delete current.geminiApiKey;
   writeSettings(current);
-  if (value) process.env.OPENAI_API_KEY = value;
-  else delete process.env.OPENAI_API_KEY;
+  if (value) process.env.GEMINI_API_KEY = value;
+  else delete process.env.GEMINI_API_KEY;
   return value;
+}
+
+function getOpenAIApiKey() {
+  const fromEnv = (process.env.OPENAI_API_KEY || "").trim();
+  if (fromEnv) return fromEnv;
+  const settings = readSettings();
+  const stored = settings.openaiApiKey || settings.apiKey;
+  return typeof stored === "string" ? stored.trim() : "";
 }
 
 function applyStoredKeyToEnv() {
   process.env.FLAME_SETTINGS_PATH = settingsPath();
-  const key = getApiKey();
-  if (key) process.env.OPENAI_API_KEY = key;
-  return key;
+  const gemini = getGeminiApiKey();
+  if (gemini) process.env.GEMINI_API_KEY = gemini;
+  const openai = getOpenAIApiKey();
+  if (openai) process.env.OPENAI_API_KEY = openai;
+  return { gemini, openai };
+}
+
+/** Prefer Gemini; used by UI "configured" checks. */
+function getApiKey() {
+  return getGeminiApiKey() || getOpenAIApiKey();
+}
+
+function setApiKey(key) {
+  return setGeminiApiKey(key);
 }
 
 module.exports = {
+  getGeminiApiKey,
+  setGeminiApiKey,
+  getOpenAIApiKey,
   getApiKey,
   setApiKey,
   applyStoredKeyToEnv,

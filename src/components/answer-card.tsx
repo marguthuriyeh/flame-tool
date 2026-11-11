@@ -18,7 +18,9 @@ export function AnswerCard({
   mock: boolean;
   source: Source;
 }) {
-  const centered = solution.answer.includes("$$") || plainSnippet(solution.answer).length < 80;
+  const multi = /(?:^|\n)\s*(?:\d+[).]|[A-Za-z][).])\s*/.test(solution.answer);
+  const centered =
+    !multi && (solution.answer.includes("$$") || plainSnippet(solution.answer).length < 80);
 
   return (
     <section className="rounded-lg border border-border bg-card px-3 py-3">
@@ -36,9 +38,11 @@ export function AnswerCard({
       <div className="question-math mt-2 text-[12px] leading-5 text-muted-foreground">
         <MathText text={solution.problemText} />
       </div>
-      <h2 className="mt-3 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">Answer</h2>
+      <h2 className="mt-3 text-[10px] font-medium uppercase tracking-[0.14em] text-primary">
+        {multi ? "Answers" : "Answer"}
+      </h2>
       <div
-        className={`answer-math mt-1 text-[22px] leading-snug text-foreground ${centered ? "text-center" : "text-left"}`}
+        className={`answer-math mt-1 whitespace-pre-wrap text-[18px] leading-snug text-foreground ${centered ? "text-center text-[22px]" : "text-left"}`}
       >
         <MathText text={solution.answer} />
       </div>

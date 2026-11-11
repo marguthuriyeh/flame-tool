@@ -30,6 +30,7 @@ export type SolveResult = {
   solution: Solution;
   mock: boolean;
   configured: boolean;
+  provider?: "gemini" | "openai" | "demo";
 };
 
 export function isSubjectChoice(value: unknown): value is SubjectChoice {

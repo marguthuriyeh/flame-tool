@@ -24,7 +24,7 @@ export function mockSolve(input: {
       detectedSubject: input.subject === "Auto" ? "General" : input.subject,
       problemText: "Problem in a screen capture or photo",
       answer:
-        "Demo mode can't read a picture. Add OPENAI_API_KEY to .env.local and restart, then Analyze this frame again.",
+        "Demo mode can't read a picture. Add a free Gemini API key (GEMINI_API_KEY or settings), then Analyze again.",
     };
   }
 
@@ -44,6 +44,6 @@ export function mockSolve(input: {
     detectedSubject: input.subject === "Auto" ? "General" : input.subject,
     problemText: text.slice(0, 280) || "Problem",
     answer:
-      "Demo mode only has sample answers for the built-in examples. Add OPENAI_API_KEY to .env.local and restart to answer this problem.",
+      "Demo mode only has sample answers for the built-in examples. Add a free Gemini API key from https://aistudio.google.com/apikey.",
   };
 }
