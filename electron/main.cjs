@@ -2,7 +2,9 @@ const {
   app,
   BrowserWindow,
   desktopCapturer,
+  globalShortcut,
   ipcMain,
+  nativeImage,
   screen,
   session,
   shell,
@@ -11,19 +13,31 @@ const {
 const path = require("path");
 const http = require("http");
 const { spawn } = require("child_process");
-const { applyStoredKeyToEnv, getApiKey, setApiKey, settingsPath } = require("./settings.cjs");
+const {
+  applyStoredKeyToEnv,
+  getGeminiApiKey,
+  setGeminiApiKey,
+  settingsPath,
+} = require("./settings.cjs");
 
 const isDev = !app.isPackaged;
 const DEV_URL = process.env.ELECTRON_START_URL || "http://127.0.0.1:3000";
+const ANALYZE_ACCELERATOR = "CommandOrControl+Shift+A";
+const MAX_CAPTURE_EDGE = 1600;
 
 /** @type {BrowserWindow | null} */
 let mainWindow = null;
 /** @type {import('child_process').ChildProcess | null} */
 let nextProcess = null;
 let nextPort = 0;
+let hotkeyBusy = false;
 
 function iconPath() {
   return path.join(__dirname, "resources", "icon.png");
+}
+
+function analyzeShortcutLabel() {
+  return process.platform === "darwin" ? "⌘⇧A" : "Ctrl+Shift+A";
 }
 
 function getScreenAccessStatus() {
@@ -33,6 +47,27 @@ function getScreenAccessStatus() {
   } catch {
     return "unknown";
   }
+}
+
+function downscaleToJpeg(pngBuffer) {
+  const image = nativeImage.createFromBuffer(pngBuffer);
+  const size = image.getSize();
+  if (!size.width || !size.height) {
+    return null;
+  }
+  const scale = Math.min(1, MAX_CAPTURE_EDGE / Math.max(size.width, size.height));
+  const width = Math.max(1, Math.round(size.width * scale));
+  const height = Math.max(1, Math.round(size.height * scale));
+  const resized =
+    scale < 1 ? image.resize({ width, height, quality: "better" }) : image;
+  const jpeg = resized.toJPEG(82);
+  const out = resized.getSize();
+  return {
+    mime: "image/jpeg",
+    width: out.width,
+    height: out.height,
+    base64: Buffer.from(jpeg).toString("base64"),
+  };
 }
 
 async function setupDisplayMediaHandler() {
@@ -113,14 +148,68 @@ async function capturePrimaryScreen() {
     };
   }
 
+  const jpeg = downscaleToJpeg(png);
+  if (!jpeg) {
+    return {
+      ok: false,
+      code: "empty-frame",
+      status,
+      message: "Could not prepare the screen frame.",
+    };
+  }
+
   return {
     ok: true,
     status,
-    mime: "image/png",
-    width: matched.thumbnail.getSize().width,
-    height: matched.thumbnail.getSize().height,
-    base64: png.toString("base64"),
+    mime: jpeg.mime,
+    width: jpeg.width,
+    height: jpeg.height,
+    base64: jpeg.base64,
   };
+}
+
+function focusMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+  if (process.platform === "darwin" && app.dock) {
+    app.dock.show();
+  }
+}
+
+async function runHotkeyAnalyze() {
+  if (hotkeyBusy) return;
+  hotkeyBusy = true;
+  try {
+    // Capture before focusing so The Flame Tool window is not in the frame.
+    const captured = await capturePrimaryScreen();
+    focusMainWindow();
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    mainWindow.webContents.send("analyze:hotkey", captured);
+  } catch (error) {
+    console.error("hotkey analyze failed", error);
+    focusMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("analyze:hotkey", {
+        ok: false,
+        code: "hotkey-failed",
+        status: getScreenAccessStatus(),
+        message: "Hotkey Analyze failed. Try the Analyze button.",
+      });
+    }
+  } finally {
+    hotkeyBusy = false;
+  }
+}
+
+function registerAnalyzeHotkey() {
+  const ok = globalShortcut.register(ANALYZE_ACCELERATOR, () => {
+    void runHotkeyAnalyze();
+  });
+  if (!ok) {
+    console.error("Failed to register Analyze hotkey", ANALYZE_ACCELERATOR);
+  }
 }
 
 function waitForUrl(url, timeoutMs = 90_000) {
@@ -244,6 +333,7 @@ async function createWindow() {
 
 function registerIpc() {
   ipcMain.handle("app:platform", () => process.platform);
+  ipcMain.handle("app:analyzeShortcut", () => analyzeShortcutLabel());
 
   ipcMain.handle("screen:access", () => {
     const status = getScreenAccessStatus();
@@ -262,11 +352,10 @@ function registerIpc() {
 
   ipcMain.handle("screen:capture", async () => capturePrimaryScreen());
 
-  ipcMain.handle("settings:getApiKey", () => getApiKey());
-
-  ipcMain.handle("settings:setApiKey", (_event, key) => {
-    const saved = setApiKey(key);
-    return { saved: Boolean(saved), configured: Boolean(saved) };
+  ipcMain.handle("settings:getGeminiApiKey", () => getGeminiApiKey());
+  ipcMain.handle("settings:setGeminiApiKey", (_event, key) => {
+    const saved = setGeminiApiKey(key);
+    return { saved: Boolean(saved), configured: Boolean(saved || getGeminiApiKey()) };
   });
 }
 
@@ -274,6 +363,7 @@ app.whenReady().then(async () => {
   applyStoredKeyToEnv();
   registerIpc();
   await setupDisplayMediaHandler();
+  registerAnalyzeHotkey();
   await createWindow();
 
   app.on("activate", async () => {
@@ -285,6 +375,10 @@ app.whenReady().then(async () => {
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
+});
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });
 
 app.on("before-quit", () => {

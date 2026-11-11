@@ -22,7 +22,7 @@ import {
   type Crop,
 } from "@/lib/capture";
 import { EXAMPLES } from "@/lib/examples";
-import { getFlameDesktop, isElectronApp } from "@/lib/flame-desktop";
+import { getFlameDesktop, isElectronApp, type HotkeyCapturePayload } from "@/lib/flame-desktop";
 import { getEmptyHistory, getHistorySnapshot, saveHistory, subscribeHistory } from "@/lib/history";
 import type { HistoryItem, SolveResult, Source, SubjectChoice } from "@/lib/types";
 
@@ -48,6 +48,9 @@ export function SolverApp() {
   const history = useSyncExternalStore(subscribeHistory, getHistorySnapshot, getEmptyHistory);
   const [result, setResult] = useState<HistoryItem | null>(null);
   const [sessionOpen, setSessionOpen] = useState(false);
+  const [shortcut, setShortcut] = useState("⌘⇧A");
+  const [elapsedMs, setElapsedMs] = useState<number | null>(null);
+  const [tickMs, setTickMs] = useState(0);
   const electron = useSyncExternalStore(
     () => () => undefined,
     () => isElectronApp(),
@@ -56,7 +59,17 @@ export function SolverApp() {
   const fileRef = useRef<HTMLInputElement>(null);
   const urlRef = useRef<string | null>(null);
   const answerRef = useRef<HTMLDivElement>(null);
+  const subjectRef = useRef(subject);
+  const historyRef = useRef(history);
+  const previewRef = useRef(preview);
+  const solveStartedRef = useRef<number | null>(null);
   const busy = phase === "capturing" || phase === "solving";
+
+  useEffect(() => {
+    subjectRef.current = subject;
+    historyRef.current = history;
+    previewRef.current = preview;
+  }, [subject, history, preview]);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,7 +77,8 @@ export function SolverApp() {
       try {
         const desktop = getFlameDesktop();
         if (desktop) {
-          const key = await desktop.getApiKey();
+          const load = desktop.getGeminiApiKey ?? desktop.getApiKey;
+          const key = await load.call(desktop);
           if (!cancelled) setConfigured(Boolean(key));
           return;
         }
@@ -82,9 +96,23 @@ export function SolverApp() {
   }, []);
 
   useEffect(() => {
+    const desktop = getFlameDesktop();
+    if (!desktop?.getAnalyzeShortcut) return;
+    void desktop.getAnalyzeShortcut().then(setShortcut);
+  }, [electron]);
+
+  useEffect(() => {
     if (!result) return;
     answerRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [result]);
+
+  useEffect(() => {
+    if (phase !== "solving" || solveStartedRef.current == null) return;
+    const id = window.setInterval(() => {
+      setTickMs(Date.now() - (solveStartedRef.current ?? Date.now()));
+    }, 100);
+    return () => window.clearInterval(id);
+  }, [phase]);
 
   function replacePreview(frame: CapturedFrame | null, source: Preview["source"] = "capture") {
     const previous = urlRef.current;
@@ -108,8 +136,23 @@ export function SolverApp() {
   }
 
   function remember(item: HistoryItem) {
-    saveHistory([item, ...history.filter((entry) => entry.id !== item.id)].slice(0, 30));
+    saveHistory([item, ...historyRef.current.filter((entry) => entry.id !== item.id)].slice(0, 30));
     setResult(item);
+  }
+
+  function beginSolveTimer() {
+    const started = Date.now();
+    solveStartedRef.current = started;
+    setElapsedMs(null);
+    setTickMs(0);
+    return started;
+  }
+
+  function endSolveTimer(started: number) {
+    const ms = Date.now() - started;
+    solveStartedRef.current = null;
+    setElapsedMs(ms);
+    setTickMs(ms);
   }
 
   async function startCapture() {
@@ -120,7 +163,7 @@ export function SolverApp() {
       replacePreview(frame, "capture");
       setPhase("preview");
     } catch (error) {
-      setPhase(preview ? "preview" : "idle");
+      setPhase(previewRef.current ? "preview" : "idle");
       const nextNotice = captureErrorNotice(error);
       if (error instanceof ScreenPermissionError) {
         setNotice({
@@ -156,18 +199,22 @@ export function SolverApp() {
     }
   }
 
-  async function solveImage() {
-    if (!preview) return;
+  async function solveImageFrame(
+    frame: CapturedFrame,
+    source: Extract<Source, "capture" | "upload" | "sample">,
+    crop: Crop | null = null,
+  ) {
     setNotice(null);
     setPhase("solving");
+    const started = beginSolveTimer();
     try {
-      const image = await frameToDataUrl(preview.blob, preview.crop);
+      const image = await frameToDataUrl(frame.blob, crop);
       const solved = await postSolve({
-        subject,
+        subject: subjectRef.current,
         image,
-        sample: preview.source === "sample",
+        sample: source === "sample",
       });
-      remember(toHistory(solved, preview.source));
+      remember(toHistory(solved, source));
       setPhase("solved");
     } catch (error) {
       setPhase("preview");
@@ -175,7 +222,19 @@ export function SolverApp() {
         title: "No answer came back",
         body: error instanceof Error ? error.message : "Try that frame again.",
       });
+    } finally {
+      endSolveTimer(started);
     }
+  }
+
+  async function solveImage() {
+    const current = previewRef.current;
+    if (!current) return;
+    await solveImageFrame(
+      { blob: current.blob, width: current.width, height: current.height },
+      current.source,
+      current.crop,
+    );
   }
 
   async function solveText(text: string, subjectChoice: SubjectChoice) {
@@ -190,6 +249,7 @@ export function SolverApp() {
     setNotice(null);
     replacePreview(null);
     setPhase("solving");
+    const started = beginSolveTimer();
     try {
       const solved = await postSolve({ subject: subjectChoice, problem: trimmed });
       remember(toHistory(solved, "text"));
@@ -200,16 +260,53 @@ export function SolverApp() {
         title: "No answer came back",
         body: error instanceof Error ? error.message : "Try that problem again.",
       });
+    } finally {
+      endSolveTimer(started);
     }
   }
 
   async function onPrimary() {
-    if (preview && phase === "preview") {
+    if (previewRef.current && phase === "preview") {
       await solveImage();
       return;
     }
     await startCapture();
   }
+
+  async function handleHotkeyPayload(payload: HotkeyCapturePayload) {
+    if (!payload.ok) {
+      setPhase("idle");
+      if (payload.code === "permission-denied") {
+        setNotice({
+          title: "Screen Recording is off",
+          body: `${payload.message} You can still upload a photo or type the problem.`,
+        });
+      } else {
+        setNotice({ title: "Hotkey Analyze failed", body: payload.message });
+      }
+      return;
+    }
+
+    const bytes = Uint8Array.from(atob(payload.base64), (char) => char.charCodeAt(0));
+    const blob = new Blob([bytes], { type: payload.mime || "image/jpeg" });
+    const frame: CapturedFrame = {
+      blob,
+      width: payload.width,
+      height: payload.height,
+    };
+    replacePreview(frame, "capture");
+    await solveImageFrame(frame, "capture", null);
+  }
+
+  useEffect(() => {
+    const desktop = getFlameDesktop();
+    if (!desktop?.onHotkeyAnalyze) return;
+    return desktop.onHotkeyAnalyze((payload) => {
+      void handleHotkeyPayload(payload);
+    });
+    // Intentionally subscribe once; handlers use refs for latest state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const primaryLabel =
     phase === "capturing"
@@ -225,10 +322,17 @@ export function SolverApp() {
   const helperCopy = electron
     ? phase === "preview"
       ? "Crop if needed, then analyze."
-      : "Captures this Mac’s main screen."
+      : `Captures this Mac’s main screen. Hotkey ${shortcut}.`
     : phase === "preview"
       ? "Crop if needed, then analyze."
       : "Share a screen, then one frame is sent.";
+
+  const timingLabel =
+    phase === "solving"
+      ? `${(tickMs / 1000).toFixed(1)}s`
+      : elapsedMs != null
+        ? `${(elapsedMs / 1000).toFixed(1)}s`
+        : null;
 
   return (
     <div className="flame-shell">
@@ -240,7 +344,7 @@ export function SolverApp() {
             </span>
             <div className="min-w-0">
               <p className="truncate text-[13px] font-medium tracking-tight text-foreground">The Flame Tool</p>
-              <p className="truncate text-[11px] text-muted-foreground">Final answer only</p>
+              <p className="truncate text-[11px] text-muted-foreground">Final answers only</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
@@ -279,11 +383,20 @@ export function SolverApp() {
           {configured === false && (
             <div className="rounded-lg border border-border bg-card px-2.5 py-2 text-[11px] leading-4 text-muted-foreground">
               {electron ? (
-                <>Demo mode. Use API key settings below for live answers.</>
+                <>Demo mode. Add a free Gemini API key below (no OpenAI credits needed).</>
               ) : (
                 <>
-                  Demo mode. Add <code className="font-mono text-accent-foreground">OPENAI_API_KEY</code> to{" "}
-                  <code className="font-mono text-accent-foreground">.env.local</code>.
+                  Demo mode. Set <code className="font-mono text-accent-foreground">GEMINI_API_KEY</code> in{" "}
+                  <code className="font-mono text-accent-foreground">.env.local</code> — free from{" "}
+                  <a
+                    href="https://aistudio.google.com/apikey"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
+                    Google AI Studio
+                  </a>
+                  .
                 </>
               )}{" "}
               <button
@@ -305,10 +418,25 @@ export function SolverApp() {
               aria-busy={busy}
               className="analyze-compact h-10 w-full rounded-lg text-[13px] font-semibold tracking-tight"
             >
-              <FlameIcon className="h-4 w-4" />
+              {phase === "solving" ? (
+                <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+              ) : (
+                <FlameIcon className="h-4 w-4" />
+              )}
               {primaryLabel}
             </Button>
-            <p className="text-center text-[11px] leading-4 text-muted-foreground">{helperCopy}</p>
+            <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+              <p className="leading-4">{helperCopy}</p>
+              {timingLabel && (
+                <span className="shrink-0 tabular-nums text-accent-foreground">{timingLabel}</span>
+              )}
+            </div>
+            {electron && (
+              <p className="text-center text-[10px] text-muted-foreground">
+                Global shortcut <span className="font-medium text-foreground">{shortcut}</span> analyzes
+                without leaving your other window.
+              </p>
+            )}
             <div className="flex flex-wrap items-center justify-center gap-1">
               {preview && (
                 <Button
@@ -436,13 +564,25 @@ export function SolverApp() {
             </div>
           )}
 
-          {result && (
-            <div ref={answerRef}>
-              <AnswerCard solution={result.solution} mock={result.mock} source={result.source} />
+          {phase === "solving" && (
+            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-2.5 py-2 text-[11px] text-muted-foreground">
+              <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+              Reading the problem and writing final answers…
             </div>
           )}
 
-          {!result && !preview && (
+          {result && (
+            <div ref={answerRef}>
+              <AnswerCard solution={result.solution} mock={result.mock} source={result.source} />
+              {elapsedMs != null && (
+                <p className="mt-1.5 text-right text-[10px] tabular-nums text-muted-foreground">
+                  Answered in {(elapsedMs / 1000).toFixed(1)}s
+                </p>
+              )}
+            </div>
+          )}
+
+          {!result && !preview && phase !== "solving" && (
             <div className="pb-1">
               <p className="text-[11px] text-muted-foreground">Examples</p>
               <div className="mt-1.5 flex flex-wrap gap-1">
