@@ -12,8 +12,8 @@ export function SubjectPicker({
 }) {
   return (
     <fieldset disabled={disabled} className="min-w-0 max-w-full">
-      <legend className="mb-2 text-sm text-muted-foreground">Subject, if you want to set it</legend>
-      <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1">
+      <legend className="mb-1.5 text-[11px] text-muted-foreground">Subject</legend>
+      <div className="flex w-full min-w-0 gap-1 overflow-x-auto pb-0.5">
         {SUBJECTS.map((subject) => {
           const selected = value === subject;
           return (
@@ -23,13 +23,13 @@ export function SubjectPicker({
               aria-pressed={selected}
               onClick={() => onChange(subject)}
               className={cn(
-                "shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "shrink-0 cursor-pointer rounded-md border px-2 py-1 text-[11px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 selected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-black/25 text-foreground hover:bg-accent",
+                  ? "border-primary/70 bg-primary text-primary-foreground"
+                  : "border-border bg-transparent text-muted-foreground hover:bg-muted hover:text-foreground",
               )}
             >
-              {subject === "Auto" ? "Auto" : subject}
+              {subject}
             </button>
           );
         })}

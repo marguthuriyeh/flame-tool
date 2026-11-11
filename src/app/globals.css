@@ -2,32 +2,32 @@
 @import "katex/dist/katex.min.css";
 
 :root {
-  --ember: #ff6b2c;
-  --ember-hot: #ff3d14;
-  --gold: #ffc857;
-  --coal: #090606;
-  --soot: #140b09;
-  --ash: #241612;
-  --smoke: #9a8174;
-  --parchment: #ffe8d4;
-  --background: var(--coal);
-  --foreground: var(--parchment);
-  --card: rgba(28, 14, 10, 0.82);
-  --card-foreground: var(--parchment);
+  --ember: #ff6a2b;
+  --ember-deep: #e24a12;
+  --ink: #f4f4f5;
+  --mute: #8b8b93;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --panel: #111113;
+  --panel-raised: #17171a;
+  --background: #0a0a0b;
+  --foreground: var(--ink);
+  --card: var(--panel-raised);
+  --card-foreground: var(--ink);
   --primary: var(--ember);
-  --primary-foreground: #1a0804;
-  --secondary: rgba(255, 107, 44, 0.12);
-  --secondary-foreground: var(--parchment);
-  --muted: rgba(255, 232, 212, 0.06);
-  --muted-foreground: var(--smoke);
-  --accent: rgba(255, 200, 87, 0.12);
-  --accent-foreground: var(--gold);
-  --border: rgba(255, 140, 70, 0.22);
-  --input: rgba(255, 140, 70, 0.28);
+  --primary-foreground: #140802;
+  --secondary: rgba(255, 106, 43, 0.1);
+  --secondary-foreground: var(--ink);
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: var(--mute);
+  --accent: rgba(255, 106, 43, 0.12);
+  --accent-foreground: #ffb089;
+  --border: var(--line);
+  --input: var(--line-strong);
   --ring: var(--ember);
   --destructive: #ff5a5a;
   --destructive-foreground: #fff5f0;
-  --radius: 0.9rem;
+  --radius: 0.55rem;
   color-scheme: dark;
 }
 
@@ -49,150 +49,96 @@
   --color-ring: var(--ring);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
-  --color-gold: var(--gold);
-  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
   --radius-lg: var(--radius);
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
 }
 
-.flame-stage {
-  position: relative;
-  isolation: isolate;
+body {
+  margin: 0;
   min-height: 100dvh;
-  overflow-x: clip;
+}
+
+.flame-shell {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
   background:
-    radial-gradient(1200px 700px at 50% -8%, rgba(255, 90, 30, 0.34), transparent 58%),
-    radial-gradient(900px 520px at 12% 18%, rgba(255, 200, 70, 0.16), transparent 55%),
-    radial-gradient(780px 480px at 88% 12%, rgba(255, 48, 18, 0.22), transparent 52%),
-    radial-gradient(700px 420px at 50% 100%, rgba(255, 90, 20, 0.12), transparent 60%),
-    linear-gradient(180deg, #1a0b07 0%, #0a0504 46%, #120805 100%);
+    radial-gradient(520px 220px at 50% -40px, rgba(255, 106, 43, 0.08), transparent 70%),
+    var(--background);
 }
 
-.flame-stage::before {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  opacity: 0.45;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(255, 200, 90, 0.18) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 70% 40%, rgba(255, 120, 40, 0.14) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 40% 70%, rgba(255, 180, 70, 0.12) 0 1px, transparent 1.5px);
-  background-size: 180px 180px, 240px 240px, 200px 200px;
-  animation: ember-drift 28s linear infinite;
+.flame-panel {
+  width: 100%;
+  max-width: 420px;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  border-inline: 1px solid var(--line);
+  background: var(--panel);
 }
 
-.flame-stage::after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: radial-gradient(ellipse at center, transparent 35%, rgba(0, 0, 0, 0.45) 100%);
-}
-
-@keyframes ember-drift {
-  from {
-    transform: translateY(0);
+@media (min-width: 480px) {
+  .flame-shell {
+    align-items: center;
+    padding: 24px 12px;
   }
-  to {
-    transform: translateY(-180px);
+
+  .flame-panel {
+    min-height: min(560px, calc(100dvh - 48px));
+    max-height: calc(100dvh - 48px);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
   }
 }
 
-@keyframes flame-breathe {
-  0%,
-  100% {
-    transform: scale(1) translateY(0);
-    filter: drop-shadow(0 0 18px rgba(255, 90, 30, 0.35));
-  }
-  50% {
-    transform: scale(1.04) translateY(-2px);
-    filter: drop-shadow(0 0 28px rgba(255, 160, 40, 0.5));
-  }
+.analyze-compact {
+  background: linear-gradient(180deg, #ff7a3d 0%, #ff5a1f 55%, #e24410 100%);
+  color: var(--primary-foreground);
+  box-shadow: 0 8px 20px rgba(226, 74, 18, 0.28);
 }
 
-@keyframes analyze-pulse {
-  0%,
-  100% {
-    box-shadow:
-      0 0 0 0 rgba(255, 107, 44, 0.35),
-      0 22px 50px rgba(255, 60, 10, 0.28);
-  }
-  50% {
-    box-shadow:
-      0 0 0 14px rgba(255, 107, 44, 0),
-      0 26px 60px rgba(255, 120, 30, 0.38);
-  }
+.analyze-compact:hover:not(:disabled) {
+  filter: brightness(1.05);
 }
 
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.flame-logo {
-  animation: flame-breathe 3.4s ease-in-out infinite;
-}
-
-.analyze-cta {
-  animation: analyze-pulse 3.2s ease-in-out infinite;
-}
-
-.rise-in {
-  animation: rise-in 0.7s ease-out both;
-}
-
-.rise-in-delay {
-  animation: rise-in 0.7s ease-out 0.12s both;
-}
-
-.rise-in-late {
-  animation: rise-in 0.7s ease-out 0.24s both;
+.analyze-compact:disabled {
+  opacity: 0.65;
 }
 
 ::selection {
-  background: rgba(255, 107, 44, 0.35);
+  background: rgba(255, 106, 43, 0.3);
 }
 
 .answer-math .katex-display {
-  margin: 0.35rem 0;
+  margin: 0.25rem 0;
   overflow-x: auto;
   overflow-y: hidden;
 }
 
 .question-math .katex {
-  font-size: 1.02em;
+  font-size: 0.95em;
 }
 
 .answer-math .katex {
-  font-size: 1.05em;
+  font-size: 1.02em;
 }
 
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-
-  .flame-stage::before,
-  .flame-logo,
-  .analyze-cta,
-  .rise-in,
-  .rise-in-delay,
-  .rise-in-late {
-    animation: none;
   }
 }

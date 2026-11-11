@@ -36,11 +36,7 @@ export function ApiKeySettings({
     try {
       const result = await desktop!.setApiKey(key);
       onConfiguredChange(result.configured);
-      setMessage(
-        result.configured
-          ? "API key saved on this Mac. Live answers are on."
-          : "API key cleared. Demo mode is on.",
-      );
+      setMessage(result.configured ? "Saved. Live answers on." : "Cleared. Demo mode on.");
     } catch {
       setMessage("Could not save the API key.");
     } finally {
@@ -49,21 +45,25 @@ export function ApiKeySettings({
   }
 
   return (
-    <div className="mx-auto mt-6 w-full max-w-xl text-left">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          {configured
-            ? "Live answers are on for this Mac app."
-            : "Demo mode — add an API key for live answers."}
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] text-muted-foreground">
+          {configured ? "Live answers on" : "Demo — add API key"}
         </p>
-        <Button type="button" variant="outline" size="sm" onClick={() => setOpen((value) => !value)}>
-          {open ? "Hide API key" : "API key settings"}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-7 px-2 text-[11px]"
+          onClick={() => setOpen((value) => !value)}
+        >
+          {open ? "Hide key" : "API key"}
         </Button>
       </div>
       {open && (
-        <div className="mt-3 rounded-2xl border border-border bg-card/95 px-4 py-4">
-          <label htmlFor="api-key" className="mb-2 block text-sm text-muted-foreground">
-            OpenAI API key (stored only on this Mac)
+        <div className="rounded-lg border border-border bg-card px-2.5 py-2.5">
+          <label htmlFor="api-key" className="mb-1.5 block text-[11px] text-muted-foreground">
+            OpenAI API key (this Mac only)
           </label>
           <input
             id="api-key"
@@ -72,32 +72,30 @@ export function ApiKeySettings({
             value={key}
             onChange={(event) => setKey(event.target.value)}
             placeholder="sk-..."
-            className="flex h-11 w-full rounded-xl border border-input bg-black/30 px-3 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-8 w-full rounded-md border border-input bg-black/40 px-2 text-[12px] text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <Button type="button" disabled={saving} onClick={() => void save()}>
-              Save key
+          <div className="mt-2 flex items-center gap-1.5">
+            <Button type="button" size="sm" className="h-7 text-[11px]" disabled={saving} onClick={() => void save()}>
+              Save
             </Button>
             <Button
               type="button"
               variant="ghost"
+              size="sm"
+              className="h-7 text-[11px]"
               disabled={saving || !key}
               onClick={() => {
                 setKey("");
                 void desktop.setApiKey("").then((result) => {
                   onConfiguredChange(result.configured);
-                  setMessage("API key cleared. Demo mode is on.");
+                  setMessage("Cleared. Demo mode on.");
                 });
               }}
             >
               Clear
             </Button>
           </div>
-          {message && <p className="mt-3 text-sm text-muted-foreground">{message}</p>}
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            You can also set <code className="font-mono">OPENAI_API_KEY</code> in the environment
-            before launching. Env wins over the saved field.
-          </p>
+          {message && <p className="mt-2 text-[11px] text-muted-foreground">{message}</p>}
         </div>
       )}
     </div>
