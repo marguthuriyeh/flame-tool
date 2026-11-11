@@ -208,11 +208,11 @@ export async function frameToDataUrl(blob: Blob, crop: Crop | null): Promise<str
     const sy = Math.max(0, Math.round(region.y));
     const sw = Math.max(1, Math.min(bitmap.width - sx, Math.round(region.w)));
     const sh = Math.max(1, Math.min(bitmap.height - sy, Math.round(region.h)));
-    const canvas = scaleCanvas(sw, sh, 1400);
+    const canvas = scaleCanvas(sw, sh, 1600);
     const context = canvas.getContext("2d");
     if (!context) throw new Error("Could not prepare the image.");
     context.drawImage(bitmap, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-    return shrinkJpeg(canvas, 1_400_000);
+    return shrinkJpeg(canvas, 900_000);
   } finally {
     bitmap.close();
   }
