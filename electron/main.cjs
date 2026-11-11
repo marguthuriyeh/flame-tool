@@ -214,12 +214,12 @@ async function createWindow() {
   const startUrl = await resolveStartUrl();
 
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 860,
-    minWidth: 900,
-    minHeight: 640,
+    width: 420,
+    height: 560,
+    minWidth: 360,
+    minHeight: 440,
     title: "The Flame Tool",
-    backgroundColor: "#090606",
+    backgroundColor: "#0a0a0b",
     autoHideMenuBar: true,
     icon: iconPath(),
     webPreferences: {

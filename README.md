@@ -2,7 +2,7 @@
 
 The Flame Tool is an AI problem solver for high-school schoolwork — math, science, English, history, and similar. A student clicks **Analyze**, shares a screen (or uploads a photo / types a question), and gets **only the final answer**. No steps. No explanation. For multiple choice, just the letter and the choice text.
 
-The UI uses a flame theme: dark charcoal backgrounds with orange, red, and yellow gradients, a flame logo, and a large centered Analyze button.
+The UI is a compact, minimal dark utility panel (Geist, near-black, subtle borders) inspired by sleek desktop tools, with a flame icon and ember accent on Analyze. The Mac app window defaults to about 420×560.
 
 It runs as a website and as a Mac app (Electron) with the same UI.
 
