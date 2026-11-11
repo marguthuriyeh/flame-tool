@@ -65,24 +65,26 @@ export function CropFrame({
   const cropping = crop !== null;
 
   return (
-    <div className="rounded-2xl border border-border bg-card/95 p-3 backdrop-blur-sm sm:p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="text-sm text-muted-foreground">
-          {cropping ? "Drag the frame or a corner. Cropping is optional." : "Using the full frame."}
+    <div className="rounded-lg border border-border bg-card p-2">
+      <div className="flex flex-wrap items-center justify-between gap-1.5">
+        <p className="text-[11px] text-muted-foreground">
+          {cropping ? "Drag to crop (optional)." : "Full frame."}
         </p>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           <Button
             type="button"
             size="sm"
+            className="h-7 px-2 text-[11px]"
             variant={cropping ? "outline" : "secondary"}
             disabled={disabled}
             onClick={() => onCropChange(null)}
           >
-            Full frame
+            Full
           </Button>
           <Button
             type="button"
             size="sm"
+            className="h-7 px-2 text-[11px]"
             variant={cropping ? "secondary" : "outline"}
             disabled={disabled}
             onClick={() => onCropChange(crop ?? insetCrop(width, height))}
@@ -91,10 +93,10 @@ export function CropFrame({
           </Button>
         </div>
       </div>
-      <div className="mt-3 flex justify-center">
+      <div className="mt-2 flex justify-center">
         <div
           ref={frameRef}
-          className="relative inline-block max-w-full overflow-hidden rounded-xl bg-[#090606]"
+          className="relative inline-block max-w-full overflow-hidden rounded-md bg-[#0a0a0b]"
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
@@ -105,7 +107,7 @@ export function CropFrame({
             src={url}
             alt="Frame to analyze"
             draggable={false}
-            className="block h-auto max-h-[min(52vh,520px)] w-auto max-w-full select-none"
+            className="block h-auto max-h-40 w-auto max-w-full select-none"
           />
           {crop && (
             <div

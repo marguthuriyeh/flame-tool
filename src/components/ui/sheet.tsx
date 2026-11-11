@@ -24,11 +24,11 @@ function SheetContent({
 }: React.ComponentProps<typeof Dialog.Content> & { side?: "left" | "right" }) {
   return (
     <Dialog.Portal>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-[rgba(5,2,1,0.72)]" />
+      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/70" />
       <Dialog.Content
         aria-describedby={undefined}
         className={cn(
-          "fixed z-50 flex h-full w-[min(100%,22rem)] flex-col gap-3 bg-[#140b09] p-4 shadow-xl outline-none",
+          "fixed z-50 flex h-full w-[min(100%,18rem)] flex-col gap-2 bg-[#111113] p-3 shadow-xl outline-none",
           side === "left" ? "inset-y-0 left-0 border-r border-border" : "inset-y-0 right-0 border-l border-border",
           className,
         )}
@@ -36,7 +36,7 @@ function SheetContent({
       >
         {children}
         <Dialog.Close
-          className="absolute right-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-lg text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="absolute right-2 top-2 flex h-7 w-7 cursor-pointer items-center justify-center rounded-md text-base text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Close"
         >
           ×
@@ -47,11 +47,11 @@ function SheetContent({
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("pr-10", className)} {...props} />;
+  return <div className={cn("pr-8", className)} {...props} />;
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<typeof Dialog.Title>) {
-  return <Dialog.Title className={cn("font-serif text-xl text-foreground", className)} {...props} />;
+  return <Dialog.Title className={cn("text-sm font-medium text-foreground", className)} {...props} />;
 }
 
 export { Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetTitle };
