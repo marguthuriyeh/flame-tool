@@ -14,7 +14,7 @@ export function ApiKeySettings({
   onConfiguredChange: (configured: boolean) => void;
 }) {
   const desktop = getFlameDesktop();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(configured !== true);
   const [key, setKey] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
